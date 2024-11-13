@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="theme-color" content="#000000" />
+    <title>WalletConnect Example</title>
+    <style>
+        body {
+            background: url('./—Pngtree—the\ background\ of\ sense\ of_988382.png');
+            width: 100vh;
+            height: 100vh;
+        }
+        #content {
+            color: white;
+            text-align: center;
+        }
+        #page-title {
+            color: yellow;
+        }
+        #actions {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="content">
+        <h1 id="page-title">WalletConnect</h1>
+        <h2>Web3 Connect</h2>
+        <div id="page-actions">
+            <p>Click to Connect</p>
+            <button id="connect-button">WalletConnect</button>
+        </div>
+        <h3 id="kq">Disconnected</h3>
+
+        <div id="actions" style="display:none;">
+            <h2>Account Management</h2>
+            <input type="text" id="name" placeholder="Name" />
+            <input type="text" id="walletAddress" placeholder="Wallet Address" />
+            <button onclick="createAccount()">Create Account</button>
+            <br/><br/>
+            <input type="number" id="accountId" placeholder="Account ID" />
+            <button onclick="readAccount()">Read Account</button>
+            <button onclick="updateAccount()">Update Account</button>
+            <button onclick="deleteAccount()">Delete Account</button>
+            <p id="result"></p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
+    <script>
+        const kq = document.getElementById('kq');
+        const actionsDiv = document.getElementById('actions');
+        const resultDiv = document.getElementById('result');
+        let account;
+        let web3;
+        let contract;
+
+        // Replace with your contract ABI and address
+        const contractABI = [
+            // ... Paste the ABI from your compiled contract here ...
+        ];
+        const contractAddress = 'YOUR_CONTRACT_ADDRESS_HERE';
+
+        // Connect to wallet
+        document.getElementById('connect-button').addEventListener('click', async () => {
+            if (window.ethereum) {
+                try {
+                    await ethereum.request({ method: 'eth_requestAccounts' });
+                    web3 = new Web3(window.ethereum);
+                    const accounts = await web3.eth.getAccounts();
+                    account = accounts[0];
+                    kq.innerHTML = "Connected: " + account;
+                    actionsDiv.style.display = 'block';
+
+                    // Initialize contract instance
+                    contract = new web3.eth.Contract(contractABI, contractAddress);
+                } catch (error) {
+                    console.error("User rejected request", error);
+                }
+            } else {
+                alert('Please install MetaMask or another Ethereum wallet.');
+            }
+        });
+
+        // CRUD Functions
+        async function createAccount() {
+            const name = document.getElementById('name').value;
+            const walletAddress = document.getElementById('walletAddress').value;
+            await contract.methods.createAccount(name, walletAddress).send({ from: account });
+            resultDiv.innerText = 'Account created successfully.';
+        }
+
+        async function readAccount() {
+            const id = document.getElementById('accountId').value;
+            const accountData = await contract.methods.readAccount(id).call();
+            resultDiv.innerText = `ID: ${accountData[0]}, Name: ${accountData[1]}, Address: ${accountData[2]}`;
+        }
+
+        async function updateAccount() {
+            const id = document.getElementById('accountId').value;
+            const name = document.getElementById('name').value;
+            const walletAddress = document.getElementById('walletAddress').value;
+            await contract.methods.updateAccount(id, name, walletAddress).send({ from: account });
+            resultDiv.innerText = 'Account updated successfully.';
+        }
+
+        async function deleteAccount() {
+            const id = document.getElementById('accountId').value;
+            await contract.methods.deleteAccount(id).send({ from: account });
+            resultDiv.innerText = 'Account deleted successfully.';
+        }
+    </script>
+</body>
+</html>

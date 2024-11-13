@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Contract CRUD Example</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
+</head>
+<body>
+    <div id="content">
+        <h1>WalletConnect</h1>
+        <button id="connect-button">Connect Wallet</button>
+        <p id="kq">Disconnected</p>
+        
+        <div id="actions" style="display: none;">
+            <h2>Account Management</h2>
+            <input type="text" id="name" placeholder="Name">
+            <input type="text" id="walletAddress" placeholder="Wallet Address">
+            <button onclick="createAccount()">Create Account</button><br><br>
+
+            <input type="number" id="accountId" placeholder="Account ID">
+            <button onclick="readAccount()">Read Account</button>
+            <button onclick="updateAccount()">Update Account</button>
+            <button onclick="deleteAccount()">Delete Account</button>
+            <p id="result"></p>
+        </div>
+    </div>
+
+    <script>
+        const contractABI = [ /* Paste your contract's ABI JSON here */ ];
+        const contractAddress = '0xYourDeployedContractAddress';
+        let web3;
+        let account;
+        let contract;
+
+        async function connectWallet() {
+            if (window.ethereum) {
+                web3 = new Web3(window.ethereum);
+                try {
+                    const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                    account = accounts[0];
+                    document.getElementById('kq').innerText = `Connected: ${account}`;
+                    document.getElementById('actions').style.display = 'block';
+
+                    contract = new web3.eth.Contract(contractABI, contractAddress);
+                } catch (error) {
+                    console.error("User rejected connection", error);
+                }
+            } else {
+                alert('Please install MetaMask!');
+            }
+        }
+        
+        async function createAccount() {
+            const name = document.getElementById('name').value;
+            const walletAddress = document.getElementById('walletAddress').value;
+            await contract.methods.createAccount(name, walletAddress).send({ from: account });
+            document.getElementById('result').innerText = 'Account created successfully.';
+        }
+
+        async function readAccount() {
+            const id = document.getElementById('accountId').value;
+            const accountData = await contract.methods.readAccount(id).call();
+            document.getElementById('result').innerText = `ID: ${accountData[0]}, Name: ${accountData[1]}, Address: ${accountData[2]}`;
+        }
+
+        async function updateAccount() {
+            const id = document.getElementById('accountId').value;
+            const name = document.getElementById('name').value;
+            const walletAddress = document.getElementById('walletAddress').value;
+            await contract.methods.updateAccount(id, name, walletAddress).send({ from: account });
+            document.getElementById('result').innerText = 'Account updated successfully.';
+        }
+
+        async function deleteAccount() {
+            const id = document.getElementById('accountId').value;
+            await contract.methods.deleteAccount(id).send({ from: account });
+            document.getElementById('result').innerText = 'Account deleted successfully.';
+        }
+
+        document.getElementById('connect-button').addEventListener('click', connectWallet);
+    </script>
+</body>
+</html>

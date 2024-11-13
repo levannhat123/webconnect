@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ethereum Smart Contract Connection</title>
+    <!-- Include Web3.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.5.2/dist/web3.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f2f5;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        #connect-button, #get-data-button, #set-data-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 10px;
+            cursor: pointer;
+        }
+        #account-info, #contract-data {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Ethereum Smart Contract Connection Example</h1>
+    <button id="connect-button">Connect Wallet</button>
+    <p id="account-info">Not connected</p>
+    <button id="get-data-button">Get Contract Data</button>
+    <button id="set-data-button">Set Contract Data</button>
+    <p id="contract-data"></p>
+
+    <script>
+        // Replace these with your contract details
+        const contractABI = [
+            // ... Paste your ABI JSON array here ...
+        ];
+        const contractAddress = "0xYourContractAddress";  // Replace with your contract address
+
+        // Variables
+        let web3;
+        let contract;
+        let userAccount;
+
+        // Connect to MetaMask
+        async function connectWallet() {
+            if (window.ethereum) {
+                web3 = new Web3(window.ethereum);
+                try {
+                    // Request account access
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    userAccount = accounts[0];
+                    document.getElementById('account-info').innerText = `Connected account: ${userAccount}`;
+
+                    // Initialize contract
+                    contract = new web3.eth.Contract(contractABI, contractAddress);
+                    console.log("Contract initialized:", contract);
+                } catch (error) {
+                    console.error("User denied account access or error occurred", error);
+                }
+            } else {
+                alert("MetaMask is not installed. Please install MetaMask to use this dApp.");
+            }
+        }
+
+        // Example: Read data from the contract
+        async function fetchContractData() {
+            if (contract) {
+                try {
+                    const data = await contract.methods.yourReadFunction().call();  // Replace with your read function
+                    document.getElementById('contract-data').innerText = `Contract Data: ${data}`;
+                } catch (error) {
+                    console.error("Error reading data from contract:", error);
+                }
+            }
+        }
+
+        // Example: Write data to the contract
+        async function setContractData() {
+            if (contract) {
+                try {
+                    const newData = "someNewData";  // Replace with the data you want to set
+                    await contract.methods.yourWriteFunction(newData).send({ from: userAccount });  // Replace with your write function
+                    alert("Data updated successfully.");
+                    fetchContractData();  // Refresh data after update
+                } catch (error) {
+                    console.error("Error writing data to contract:", error);
+                }
+            }
+        }
+
+        // Event Listeners
+        document.getElementById('connect-button').addEventListener('click', connectWallet);
+        document.getElementById('get-data-button').addEventListener('click', fetchContractData);
+        document.getElementById('set-data-button').addEventListener('click', setContractData);
+    </script>
+</body>
+</html>
